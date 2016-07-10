@@ -10,7 +10,7 @@ Usage:
 
 2. Add your API key to userConfig.json
 
-3. Run ```bash
+3. Run ```
 $ node index.js
 ```
 4. Navigate to localhost:8080
