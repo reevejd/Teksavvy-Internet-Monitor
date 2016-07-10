@@ -1,17 +1,42 @@
+
 var socket = io()
 
 socket.on('currentData', function (data) {
     console.log('received current usage total');
     console.log('currentData' + data);
-    initializeGauge(data);
+    doneLoading('#gaugeLoadingWrapper');
+    setTimeout(100, initializeGauge(data));
+
 
 })
 
 socket.on('monthData', function (data) {
     console.log('received monthly usage data');
     console.log('Monthly data ' + data)
+    doneLoading('#currentGraphContainer');
     initializeGraph(data);
 })
+
+$(document).ready(function() {
+    // display loading animations
+    startLoading('#currentGraphContainer');
+    startLoading('#gaugeLoadingWrapper');
+
+})
+
+startLoading = function(selector) {
+    var itemLoading = $(selector);
+    var loadingBars = $(document.createElement('div')).addClass('spinner');
+    for (var i = 1; i < 6; i++) {
+        var bar = $(document.createElement('div')).addClass('rect'+i);
+        bar.appendTo(loadingBars);
+    }
+    loadingBars.appendTo(itemLoading);
+}
+
+doneLoading = function(selector) {
+    $(selector).empty();
+}
 
 var initializeGauge = function(data) {
     var opts = {
@@ -28,19 +53,24 @@ var initializeGauge = function(data) {
             generateGradient: true,
             percentColors: [[0.0, "#8EAEBD"], [0.50, "#30415D"], [1.0, "#CF6766"]]
         };
-        var target = document.getElementById('gaugeCanvas'); // the canvas element to draw the gauge in
-        var gauge = new Gauge(target).setOptions(opts); 
+        var target = document.getElementById('gaugeCanvas'); // target canvas element
+        var gauge = new Gauge(target).setOptions(opts);  // construct gauge
 
-        gauge.setTextField(document.getElementById('gaugeValueDisplay')); // show the gauge value in this div
+        gauge.setTextField(document.getElementById('gaugeValueDisplay'));
 
         gauge.maxValue = 400; // set max gauge value -- need to set this based on config file later
         gauge.animationSpeed = 71; // set animation speed (32 is default value)
-        //console.log(data);
         gauge.set(data['jsonResults']['value'][0]['OnPeakDownload']); // set actual value
 }
 
 
 var initializeGraph = function (data) {
+
+    var monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+    var d = new Date();
+    var currentMonth =  monthNames[d.getMonth()];
+
     $('#currentGraphContainer').highcharts({
         exporting: {
             enabled: false
@@ -54,7 +84,7 @@ var initializeGraph = function (data) {
             
         },
         title: {
-            text: 'Daily Internet Usage'
+            text: 'Daily Internet Usage for ' + currentMonth
         },
         subtitle: {
             text: 'Click and drag to zoom in'
