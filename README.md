@@ -9,8 +9,8 @@ Usage:
 
 1. [Get your TekSavvy API key](https://myaccount.teksavvy.com/ApiKey/ApiKeyManagement)
 
-2. Add your API key to userConfig.json
+2. Add your API key to ```userConfig.json```
 
 3. Run  ```$ node index.js```
 
-4. Navigate to localhost:8080
+4. Navigate to [localhost:8080](http://localhost:8080)
