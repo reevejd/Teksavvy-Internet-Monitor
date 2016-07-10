@@ -1,11 +1,15 @@
 A Node.js app for displaying TekSavvy internet usage.
 
+[Demo Here](https://mysterious-bayou-17927.herokuapp.com/)
+------
+
 ![Example](https://github.com/reevejd/internetUsageMonitor/raw/master/example.png)
 
-[Demo Here](https://mysterious-bayou-17927.herokuapp.com/)
+
 
 Usage:
 ---
+_________
 
 1. [Get your TekSavvy API key](https://myaccount.teksavvy.com/ApiKey/ApiKeyManagement)
 
