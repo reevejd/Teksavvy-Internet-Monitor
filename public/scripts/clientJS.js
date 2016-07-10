@@ -1,67 +1,101 @@
 var socket = io()
 
-socket.on('test', function(data) {
-    console.log('received data from server')
-    console.log(data)
+socket.on('currentData', function (data) {
+    console.log('received current usage total');
+    console.log('currentData' + data);
+    initializeGauge(data);
+
 })
 
-$(function () {
+socket.on('monthData', function (data) {
+    console.log('received monthly usage data');
+    console.log('Monthly data ' + data)
+    initializeGraph(data);
+})
+
+var initializeGauge = function(data) {
+    var opts = {
+            lines: 12, // The number of lines to draw
+            angle: 0.15, // The length of each line
+            lineWidth: 0.44, // The line thickness
+            pointer: {
+                length: 0.78, // The radius of the inner circle
+                strokeWidth: 0.035, // The rotation offset
+                color: '#000000' // Fill color
+            },
+            limitMax: 'false',   // If true, the pointer will not go past the end of the gauge
+
+            generateGradient: true,
+            percentColors: [[0.0, "#8EAEBD"], [0.50, "#30415D"], [1.0, "#CF6766"]]
+        };
+        var target = document.getElementById('gaugeCanvas'); // the canvas element to draw the gauge in
+        var gauge = new Gauge(target).setOptions(opts); 
+
+        gauge.setTextField(document.getElementById('gaugeValueDisplay')); // show the gauge value in this div
+
+        gauge.maxValue = 400; // set max gauge value -- need to set this based on config file later
+        gauge.animationSpeed = 71; // set animation speed (32 is default value)
+        //console.log(data);
+        gauge.set(data['jsonResults']['value'][0]['OnPeakDownload']); // set actual value
+}
+
+
+var initializeGraph = function (data) {
     $('#currentGraphContainer').highcharts({
-        chart: {
-            type: 'line'
-        },
-        title: {
-            text: 'Monthly Average Temperature'
-        },
-        subtitle: {
-            text: 'Source: WorldClimate.com'
-        },
-        xAxis: {
-            categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-        },
-        yAxis: {
-            title: {
-                text: 'Temperature (°C)'
-            }
+        exporting: {
+            enabled: false
         },
         plotOptions: {
-            line: {
-                dataLabels: {
-                    enabled: true
-                },
-                enableMouseTracking: false
-            }
+            color: '#1565c0'
         },
+        chart: {
+            zoomType: 'xy',
+            margin: 30
+            
+        },
+        title: {
+            text: 'Daily Internet Usage'
+        },
+        subtitle: {
+            text: 'Click and drag to zoom in'
+        },
+        xAxis: [{
+            type: 'datetime',
+            dateTimeLabelFormats: {
+                day: '%b %e'
+            },
+            minPadding: 0.05,
+            maxPadding: 0.05
+        }],
+        yAxis: { 
+            labels: {
+                format: '{value} GB',
+                style: {
+                    color: Highcharts.getOptions().colors[1]
+                }
+            },
+            title: {
+                text: 'Data Usage',
+                style: {
+                    color: Highcharts.getOptions().colors[1]
+                }
+            }
+
+        },
+        tooltip: {
+            pointFormat: '{point.y}',
+        },
+        legend: { enabled: false },
+        credits: { enabled: false },
         series: [{
-            name: 'Tokyo',
-            data: [7.0, 6.9, 9.5, 14.5, 18.4, 21.5, 25.2, 26.5, 23.3, 18.3, 13.9, 9.6]
-        }, {
-            name: 'London',
-            data: [3.9, 4.2, 5.7, 8.5, 11.9, 15.2, 17.0, 16.6, 14.2, 10.3, 6.6, 4.8]
+            color: '#1565c0',
+            label: false,
+            type: 'column',
+            data: data['processedData'],
+            tooltip: {
+                valueSuffix: ' GB'
+            }
         }]
     });
+}
 
-
-
-    var opts = {
-        lines: 12, // The number of lines to draw
-        angle: 0.15, // The length of each line
-        lineWidth: 0.44, // The line thickness
-        pointer: {
-            length: 0.78, // The radius of the inner circle
-            strokeWidth: 0.035, // The rotation offset
-            color: '#000000' // Fill color
-        },
-        limitMax: 'false',   // If true, the pointer will not go past the end of the gauge
-        
-        generateGradient: true,
-        percentColors: [[0.0, "#8EAEBD" ], [0.50, "#30415D"], [1.0, "#CF6766"]]
-    };
-    var target = document.getElementById('periodGauge'); // your canvas element
-    var gauge = new Gauge(target).setOptions(opts); // create sexy gauge!
-    gauge.maxValue = 400; // set max gauge value
-    gauge.animationSpeed = 71; // set animation speed (32 is default value)
-    gauge.set(220); // set actual value
-
-
-});

@@ -62,7 +62,7 @@ io.on('connection', function(socket) {
   }
   console.log('making request');
   request(historicalData, function (error, response, body) {
-    if (error) {
+    if (error) { // need to check response code here later
       console.log('response: ' +  JSON.stringify(response));
       console.log('An error occurred while retrieving TekSavvy historical data: ', error);
       

@@ -23,27 +23,41 @@
 </head>
 
 <body>
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-12">
-                <h1>Internet Usage Monitor</h1>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-5" id="gaugeColumn">
-                <h4>Gauges</h4>
-                <canvas id="periodGauge">
+  <div class="container-fluid">
+    <div class="row">
+     
+      <!--Title-->
+      <div class="col-md-12">
+        <h1>Internet Usage Monitor</h1>
+      </div>
 
-                </canvas>
-            </div>
-            <div class="col-md-7" id="graphColumn">
-                <h4>Graphs</h4>
-                <div id="currentGraphContainer" style="min-width: 310px; height: 400px; margin: 0 auto">
-
-                </div>
-            </div>
-        </div>
     </div>
+    <div class="row">
+      
+      
+      <!--Current Usage Gauge-->
+
+      <div class="col-md-4" id="gaugeColumn">
+        <h4>Gauges</h4>
+
+        <div id="gaugeValueDisplay">
+            
+        </div>
+        <canvas id="gaugeCanvas">
+
+        </canvas>
+      </div>
+
+      <!--Monthly Usage Chart-->
+
+      <div class="col-md-8" id="graphColumn">
+        <h4>Graphs</h4>
+        <div id="currentGraphContainer" style="min-width: 310px; height: 400px; margin: 0 auto">
+
+        </div>
+      </div>
+    </div>
+  </div>
 
 
 </body>
