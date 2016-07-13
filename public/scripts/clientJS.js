@@ -80,7 +80,8 @@ var initializeGraph = function (data) {
         },
         chart: {
             zoomType: 'xy',
-            margin: 30
+            margin: 30,
+            marginLeft: 100
             
         },
         title: {
