@@ -79,24 +79,16 @@ var initializeGraph = function (data) {
             color: '#1565c0'
         },
         chart: {
-            zoomType: 'xy',
-            margin: 30,
-            marginLeft: 100
-            
+            zoomType: 'x'
         },
         title: {
             text: 'Daily Internet Usage for ' + currentMonth
-        },
-        subtitle: {
-            text: 'Click and drag to zoom in'
         },
         xAxis: [{
             type: 'datetime',
             dateTimeLabelFormats: {
                 day: '%b %e'
-            },
-            minPadding: 0.05,
-            maxPadding: 0.05
+            }
         }],
         yAxis: { 
             labels: {
@@ -121,7 +113,7 @@ var initializeGraph = function (data) {
         series: [{
             color: '#1565c0',
             label: false,
-            type: 'column',
+            type: 'spline',
             data: data['processedData'],
             tooltip: {
                 valueSuffix: ' GB'
