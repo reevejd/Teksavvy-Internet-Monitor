@@ -69,7 +69,7 @@ app.get('/dashboard', function(req, res) {
   console.log('making req');
   request(historicalData, function (error, res, body) {
     if (error) { // need to check res code here later
-      console.log('res: ' +  JSON.stringify(res));
+     // console.log('res: ' +  JSON.stringify(res));
       console.log('An error occurred while retrieving TekSavvy historical data: ', error);
       
     } else {
@@ -92,7 +92,7 @@ app.get('/dashboard', function(req, res) {
         if (error) {
           console.log(error);
         } else {
-          console.log(res)
+          //console.log(res)
           jsonResults = JSON.parse(body);
           console.log("processing results to only include this month's data")
           processAndSendResults(jsonResults, function(processedData) {
@@ -135,7 +135,7 @@ var processAndSendResults = function(data, callback) {
       dateAndDownload.push([Date.parse(points[i]['Date']), points[i]['OnPeakDownload']]);
     }
     if (i == 0) {
-      callback(dateAndDownload);
+      callback(dateAndDownload.reverse()); // reverse it, highcharts wants sorted data
     }
     
   }

@@ -1,6 +1,12 @@
+body {
+    text-align: center;
+}
+
+.title {
+    padding-bottom: 5%;
+}
+
 #gaugeValueDisplay {
-    top: 21px;
-    left: 133px;
     font-size: 2em;
     font-weight: bold;
     color: black;

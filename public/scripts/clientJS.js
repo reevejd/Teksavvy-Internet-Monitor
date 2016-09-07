@@ -5,7 +5,7 @@ socket.on('currentData', function (data) {
     console.log('received current usage total');
     console.log('currentData' + data);
     doneLoading('#gaugeLoadingWrapper');
-    setTimeout(100, initializeGauge(data.current, data.cap));
+    initializeGauge(data.current, data.cap);
 
 
 })
@@ -39,6 +39,10 @@ doneLoading = function(selector) {
 }
 
 var initializeGauge = function(current, cap) {
+    var currentValue = Math.round(current['value'][0]['OnPeakDownload'])
+    var cap = parseInt(cap);
+    console.log(currentValue, cap);
+
     var opts = {
             lines: 12, // The number of lines to draw
             angle: 0.15, // The length of each line
@@ -48,20 +52,48 @@ var initializeGauge = function(current, cap) {
                 strokeWidth: 0.035, // The rotation offset
                 color: '#000000' // Fill color
             },
-            limitMax: 'false',   // If true, the pointer will not go past the end of the gauge
+            limitMax: 'true',   // If true, the pointer will not go past the end of the gauge
 
             generateGradient: true,
             percentColors: [[0.0, "#8EAEBD"], [0.50, "#30415D"], [1.0, "#CF6766"]]
         };
         var target = document.getElementById('gaugeCanvas'); // target canvas element
         var gauge = new Gauge(target).setOptions(opts);  // construct gauge
+        gauge.maxValue = cap ; // set max gauge value -- gaugejs bugs out if the value is greater than the max
 
-        gauge.setTextField(document.getElementById('gaugeValueDisplay'));
+        if (currentValue > cap) {
+            //gauge.setTextField(currentValue-1)
+            //var customGaugeDisplay = document.createElement('span');
+            //customGaugeDisplay.id='gaugeValueDisplayCustom';
+            
+            //$("<span id='gaugeValueDisplayCustom'>" + currentValue + " ("+ eval(currentValue - cap)+ " over your cap)</span>")
+            
+            //console.log(document.getElementById('gaugeValueDisplayCustom'))
+            //console.log(document.getElementById('gaugeValueDisplay'));
 
-        gauge.maxValue = cap; // set max gauge value -- need to set this based on config file later
-        gauge.animationSpeed = 71; // set animation speed (32 is default value)
-        console.log(current)
-        gauge.set(current['value'][0]['OnPeakDownload']); // set actual value
+            gauge.setTextField(document.getElementById('gaugeValueDisplay'));
+            //console.log(currentValue);
+            //console.log(document.getElementById('gaugeValueDisplay'));
+            gauge.animationSpeed = 3;
+            gauge.set(cap);
+            console.log($('#gaugeValueDisplay').text())
+            var gaugeText = currentValue + " ("+ eval(currentValue - cap)+ " GB over your cap)"
+            setTimeout(function() {
+                $('#gaugeValueDisplay').text(gaugeText);
+                //$('#gaugeValueDisplay').css('font-size', '1.6em');
+            }, 600);
+
+        } else {
+
+            gauge.setTextField(document.getElementById('gaugeValueDisplay'));
+            console.log(document.getElementById('gaugeValueDisplay'));
+
+            gauge.animationSpeed = 80; // set animation speed (32 is default value)
+            console.log(current)
+            gauge.set(currentValue); // set actual value
+        }
+
+        
 }
 
 
