@@ -5,14 +5,14 @@ socket.on('currentData', function (data) {
     console.log('received current usage total');
     console.log('currentData' + data);
     doneLoading('#gaugeLoadingWrapper');
-    setTimeout(100, initializeGauge(data));
+    setTimeout(100, initializeGauge(data.current, data.cap));
 
 
 })
 
-socket.on('monthData', function (data) {
+socket.on('monthlyData', function (data) {
     console.log('received monthly usage data');
-    console.log('Monthly data ' + data)
+    console.log('Monthly data ', data)
     doneLoading('#currentGraphContainer');
     initializeGraph(data);
 })
@@ -38,7 +38,7 @@ doneLoading = function(selector) {
     $(selector).empty();
 }
 
-var initializeGauge = function(data) {
+var initializeGauge = function(current, cap) {
     var opts = {
             lines: 12, // The number of lines to draw
             angle: 0.15, // The length of each line
@@ -58,9 +58,10 @@ var initializeGauge = function(data) {
 
         gauge.setTextField(document.getElementById('gaugeValueDisplay'));
 
-        gauge.maxValue = 400; // set max gauge value -- need to set this based on config file later
+        gauge.maxValue = cap; // set max gauge value -- need to set this based on config file later
         gauge.animationSpeed = 71; // set animation speed (32 is default value)
-        gauge.set(data['jsonResults']['value'][0]['OnPeakDownload']); // set actual value
+        console.log(current)
+        gauge.set(current['value'][0]['OnPeakDownload']); // set actual value
 }
 
 

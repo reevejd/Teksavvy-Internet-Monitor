@@ -1,6 +1,4 @@
 var request = require('request'); // for making API calls to TekSavvy
-var APIKey = require('./userConfig.json')['APIKey']
-console.log(APIKey);
 
 // port = process.env.PORT for deploying on heroku, 8080 for local testing
 var port = process.env.PORT || 8080;
@@ -20,13 +18,13 @@ app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-// handling requests/response from the user
-app.get('/', function(request, response) {
-  response.render('pages/index');
-})
-
-// when a user connects, push teksavvy data to the client
-io.on('connection', function(socket) {
+// handling reqs/res from the user
+app.get('/', function(req, res) {
+  res.render('pages/index');
+  var APIKey = req.query.APIKey;
+  console.log('APIKey: ', APIKey);
+  var Cap = req.query.Cap;
+  console.log('Cap: ', Cap);
 
 
   // url query + header for retrieving current usage totals
@@ -37,14 +35,17 @@ io.on('connection', function(socket) {
     }
   }
 
-  request(currentTotals, function (error, response, body) {
+  request(currentTotals, function (error, res, body) {
     if (error) {
       console.log('An error occurred while retrieving TekSavvy current data: ', error);
     } else {
       console.log(body);
       jsonResults = JSON.parse(body);
       console.log('TekSavvy current data successfully retrieved:\n', jsonResults, '\n...sending to client now...');
-      socket.emit('currentData', { jsonResults });
+      io.sockets.emit('currentData', { 
+        current: jsonResults,
+        cap: Cap 
+      });
     }
   });
   
@@ -60,10 +61,10 @@ io.on('connection', function(socket) {
       'TekSavvy-APIKey': APIKey
     }
   }
-  console.log('making request');
-  request(historicalData, function (error, response, body) {
-    if (error) { // need to check response code here later
-      console.log('response: ' +  JSON.stringify(response));
+  console.log('making req');
+  request(historicalData, function (error, res, body) {
+    if (error) { // need to check res code here later
+      console.log('res: ' +  JSON.stringify(res));
       console.log('An error occurred while retrieving TekSavvy historical data: ', error);
       
     } else {
@@ -82,17 +83,17 @@ io.on('connection', function(socket) {
         }
       }
 
-      request(customSkipOptions, function (error, response, body) {
+      request(customSkipOptions, function (error, res, body) {
         if (error) {
           console.log(error);
         } else {
-          console.log(response)
+          console.log(res)
           jsonResults = JSON.parse(body);
           console.log("processing results to only include this month's data")
           processAndSendResults(jsonResults, function(processedData) {
             if (processedData) {
               console.log('TekSavvy historical data successfully retrieved:\n', processedData, '\n...sending to client now...');
-              socket.emit('monthData', { processedData });
+              io.sockets.emit('monthlyData', { processedData });
             }
           });
           
@@ -102,6 +103,7 @@ io.on('connection', function(socket) {
     }
   });
 })
+
 
 var processAndSendResults = function(data, callback) {
 
