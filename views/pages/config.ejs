@@ -14,16 +14,48 @@
   <!--stylesheets-->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7"
     crossorigin="anonymous">
-  <link rel="stylesheet" type="text/css" href="/stylesheets/main.css">
+  <link rel="stylesheet" type="text/css" href="/stylesheets/config.css">
 
 </head>
 
 <body>
-  <div>
-  API Key: <input id="APIKey" type="text">
-  Data Cap: <input id="Cap" type="number">
-  <button id="start" type="button">Continue</button>
-</div>
+  <div class="row">
+    <div class="col-md-12">
+      <h1>TekSavvy Internet Monitor</h1>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-12">
+      <form id="configForm">
+        <div class="form-group">
+          <label for="APIKey">TekSavvy API Key:</label>
+          <input id="APIKey" class="form-control" type="text"> 
+        </div>
+        <div class="form-group">
+          <label for="Cap">Data Cap (GB):</label>
+          <input id="Cap" class="form-control" type="number">
+        </div>
+        <div class="form-group">
+          <button id="start" class="btn btn-primary" type="button">Continue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!--div class="row">
+    <div class="col-md-12">
+      <h3>How it works:</h3>
+        <span>
+          Go to https://myaccount.teksavvy.com/ and get your API Key </br>
+          under My Account. </br>
+          Enter your API Key and Cap (if you have unlimited, leave this field blank). </br>
+          Hit continue, and bookmark the resulting url for quick access.
+        <span>
+        
+    </div>
+  </div-->
+
 
 </body>
 
