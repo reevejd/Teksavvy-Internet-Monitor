@@ -1,15 +1,16 @@
 var request = require('request'); // for making API calls to TekSavvy
 
 // port = process.env.PORT for deploying on heroku, 8080 for local testing
-var port = process.env.PORT || 8080;
 
 // setting up express 4 server & socket.io
 var express = require('express');
 var app = express();
-var server = require('http').createServer(app).listen(port, function() {
-  console.log('Listening on port ', port);
-});
+var server = require('http').createServer(app);
 var io = require('socket.io').listen(server)
+
+var port = process.env.PORT || 8080;
+server.listen(port)
+
 
 // static files are stored in the public folder
 app.use(express.static(__dirname + '/public'));
