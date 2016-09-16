@@ -19,17 +19,15 @@ app.use(express.static(__dirname + '/public'));
 app.set('views', __dirname + '/views');
 app.set('view engine', 'ejs');
 
-app.get('/', function(req,res) {
-  res.render('pages/config');
-});
+
 
 
 // handling reqs/res from the user
-app.get('/dashboard', function(req, res) {
+app.get('/', function(req, res) {
   res.render('pages/dashboard');
-  var APIKey = req.query.APIKey;
+  var APIKey = process.env.APIKey;
   console.log('APIKey: ', APIKey);
-  var Cap = req.query.Cap;
+  var Cap = process.env.Cap;
   console.log('Cap: ', Cap);
 
 
