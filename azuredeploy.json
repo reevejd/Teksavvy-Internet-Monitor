@@ -30,10 +30,10 @@
       ],
       "defaultValue": "0"
     },
-    "TekSavvy API Key": {
+    "APIKey": {
       "type": "string"
     },
-    "Data Usage Cap (GB)": {
+    "Cap": {
       "type": "int"
     },
     "repoUrl": {
