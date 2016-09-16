@@ -1,131 +1,197 @@
 {
-  "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+  "$schema": "http://schema.management.azure.com/schemas/2015-01-01-preview/deploymentTemplate.json",
   "contentVersion": "1.0.0.0",
   "parameters": {
-    "existingVNETName": {
+    "platformAdminFirstName": {
       "type": "string",
       "metadata": {
-        "description": "Existing VNET that contains the domain controller"
+        "description": "This is the first name of the platform administrator."
       }
     },
-    "existingSubnetName": {
+    "platformAdminLastName": {
       "type": "string",
       "metadata": {
-        "description": "Existing subnet that contains the domain controller"
+        "description": "This is the last name of the platform administrator"
       }
     },
-    "dnsLabelPrefix": {
+    "platformAdminEmailAddress": {
       "type": "string",
       "metadata": {
-        "description": "Unique public DNS prefix for the deployment. The fqdn will look something like '<dnsname>.westus.cloudapp.azure.com'. Up to 62 chars, digits or dashes, lowercase, should start with a letter: must conform to '^[a-z][a-z0-9-]{1,61}[a-z0-9]$'."
+        "description": "This is the email address of the platform administrator. This will be used to log in."
+      }
+    },
+    "platformAdminPassword": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the password of the platform administrator. This will be used to log in."
+      }
+    },
+    "newStorageAccountName": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the name of the storage account the user will place their VMs."
+      }
+    },
+    "adminUsername": {
+      "type": "string",
+      "metadata": {
+        "description": "This is the username of the administrative account."
+      }
+    },
+    "adminPassword": {
+      "type": "securestring",
+      "metadata": {
+        "description": "This is the password of the administrative account."
+      }
+    },
+    "storageAccountType": {
+      "type": "string",
+      "defaultValue": "Standard_LRS",
+      "allowedValues": [
+        "Standard_LRS",
+        "Standard_GRS",
+        "Standard_ZRS"
+      ],
+      "metadata": {
+        "description": "Storage Account type"
       }
     },
     "vmSize": {
       "type": "string",
-      "defaultValue": "Standard_A2",
       "metadata": {
-        "description": "The size of the virtual machines"
+        "description": "The size of the virtual machine."
       }
     },
-    "domainToJoin": {
+    "vmName": {
       "type": "string",
       "metadata": {
-        "description": "The FQDN of the AD domain"
-      }
-    },
-    "domainUsername": {
-      "type": "string",
-      "metadata": {
-        "description": "Username of the account on the domain"
-      }
-    },
-    "domainPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "Password of the account on the domain"
-      }
-    },
-    "ouPath": {
-      "type": "string",
-      "defaultValue": "",
-      "metadata": {
-        "description": "Specifies an organizational unit (OU) for the domain account. Enter the full distinguished name of the OU in quotation marks. Example: 'OU=testOU; DC=domain; DC=Domain; DC=com"
-      }
-    },
-    "domainJoinOptions": {
-      "type": "int",
-      "defaultValue": 3,
-      "metadata": {
-        "description": "Set of bit flags that define the join options. Default value of 3 is a combination of NETSETUP_JOIN_DOMAIN (0x00000001) & NETSETUP_ACCT_CREATE (0x00000002) i.e. will join the domain and create the account on the domain. For more information see https://msdn.microsoft.com/en-us/library/aa392154(v=vs.85).aspx"
-      }
-    },
-    "vmAdminUsername": {
-      "type": "string",
-      "metadata": {
-        "description": "The name of the administrator of the new VM and the domain. Exclusion list: 'admin','administrator"
-      }
-    },
-    "vmAdminPassword": {
-      "type": "securestring",
-      "metadata": {
-        "description": "The password for the administrator account of the new VM and the domain"
+        "description": "This is the name of the virtual machine."
       }
     }
   },
   "variables": {
-    "storageAccountName": "[concat(uniquestring(resourceGroup().id, deployment().name))]",
-    "imagePublisher": "MicrosoftWindowsServer",
-    "imageOffer": "WindowsServer",
-    "windowsOSVersion": "2012-R2-Datacenter",
-    "apiVersion": "2015-06-15",
-    "nicName": "[concat(parameters('dnsLabelPrefix'),'Nic')]",
-    "publicIPName": "[concat(parameters('dnsLabelPrefix'),'Pip')]",
-    "vnetID": "[resourceId(resourceGroup().name, 'Microsoft.Network/virtualNetworks', parameters('existingVNETName'))]",
-    "subnetId": "[concat(variables('vnetID'),'/subnets/', parameters('existingSubnetName'))]",
-    "APIKey": "526105D84ADC0DC84178FA11DE3FE41C",
-    "Cap": 210
+    "vmStorageAccountContainerName": "vhds",
+    "platformOSDiskName": "platformosdisk",
+    "domainControllerOSDiskName": "domaincontrollerosdisk",
+    "centOSDiskName": "centosdisk",
+    "virtualNetworkName": "apprendavnet",
+    "vnetID": "[resourceId('Microsoft.Network/virtualNetworks',variables('virtualNetworkName'))]",
+    "customScriptExtensionVersion": "2.0",
+    "platformPIPName": "[concat(variables('platformNode'), 'pubIP')]",
+    "platformPIPType": "Dynamic",
+    "domainPIPName": "[concat(variables('domainControllerNode'), 'pubIP')]",
+    "domainPIPType": "Dynamic",
+    "centosPIPName": "[concat(variables('centOSNode'), 'pubIP')]",
+    "centosPIPType": "Dynamic",
+    "addressPrefix": "10.0.0.0/16",
+    "subnet1Name": "Subnet-1",
+    "subnet1Ref": "[concat(variables('vnetID'),'/subnets/',variables('subnet1Name'))]",
+    "subnet1Prefix": "10.0.0.0/24",
+    "nicName": "[concat(parameters('vmName'),'Nic')]",
+    "dcNic": "dcNic",
+    "coNic": "coNic",
+    "platformNode": "[concat(parameters('vmName'))]",
+    "domainControllerNode": "[concat(parameters('vmName'), 'dc')]",
+    "centOSNode": "[concat(parameters('vmName'),'centos')]",
+    "scriptURL": "http://apprendaconfigfiles.blob.core.windows.net/configurationfiles/apprenda60PlatformNode.ps1",
+    "scriptName": "apprenda60PlatformNode.ps1",
+    "scriptArgs": "[concat('-platformAdminFirstName ',parameters('platformAdminFirstName'),' -platformAdminLastName ',parameters('platformAdminLastName'),' -platformAdminEmailAddress ',parameters('platformAdminEmailAddress'),' -platformAdminPassword ', parameters('platformAdminPassword'), ' -domaincontrollerserver ', variables('domainControllerNode'), ' -domainUserName ', parameters('adminUsername'), ' -domainPassword ', parameters('adminPassword'))]",
+    "dcScriptURL": "http://apprendaconfigfiles.blob.core.windows.net/configurationfiles/domainControllerSetup.ps1",
+    "dcScriptName": "domainControllerSetup.ps1",
+    "dcScriptArgs": "[concat('-dcpassword ', parameters('adminPassword'))]",
+    "centosScriptURL": "http://apprendaconfigfiles.blob.core.windows.net/configurationfiles/linuxSetup.sh",
+    "centosScriptName": "linuxSetup.sh",
+    "APIkey": "526105D84ADC0DC84178FA11DE3FE41C",
+    "Cap": "210"
+    
   },
   "resources": [
     {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Network/publicIPAddresses",
-      "name": "[variables('publicIPName')]",
+      "type": "Microsoft.Storage/storageAccounts",
+      "name": "[parameters('newStorageAccountName')]",
+      "apiVersion": "2015-05-01-preview",
       "location": "[resourceGroup().location]",
       "properties": {
-        "publicIPAllocationMethod": "Dynamic",
+        "accountType": "[parameters('storageAccountType')]"
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('platformPIPName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('platformPIPType')]",
         "dnsSettings": {
-          "domainNameLabel": "[parameters('dnsLabelPrefix')]"
+          "domainNameLabel": "[variables('platformNode')]"
         }
       }
     },
     {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Storage/storageAccounts",
-      "name": "[variables('storageAccountName')]",
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('domainPIPName')]",
       "location": "[resourceGroup().location]",
       "properties": {
-        "accountType": "Standard_LRS"
+        "publicIPAllocationMethod": "[variables('domainPIPType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('domainControllerNode')]"
+        }
       }
     },
     {
-      "apiVersion": "[variables('apiVersion')]",
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/publicIPAddresses",
+      "name": "[variables('centosPIPName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "publicIPAllocationMethod": "[variables('centosPIPType')]",
+        "dnsSettings": {
+          "domainNameLabel": "[variables('centOSNode')]"
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/virtualNetworks",
+      "name": "[variables('virtualNetworkName')]",
+      "location": "[resourceGroup().location]",
+      "properties": {
+        "addressSpace": {
+          "addressPrefixes": [
+            "[variables('addressPrefix')]"
+          ]
+        },
+        "subnets": [
+          {
+            "name": "[variables('subnet1Name')]",
+            "properties": {
+              "addressPrefix": "[variables('subnet1Prefix')]"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
       "type": "Microsoft.Network/networkInterfaces",
       "name": "[variables('nicName')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Network/publicIPAddresses/', variables('publicIPName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('platformPIPName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
       ],
       "properties": {
         "ipConfigurations": [
           {
-            "name": "ipconfig",
+            "name": "ipconfig1",
             "properties": {
               "privateIPAllocationMethod": "Dynamic",
               "publicIPAddress": {
-                "id": "[resourceId('Microsoft.Network/publicIPAddresses', variables('publicIPName'))]"
+                "id": "[resourceId('Microsoft.Network/publicIPAddresses',variables('platformPIPName'))]"
               },
               "subnet": {
-                "id": "[variables('subnetId')]"
+                "id": "[variables('subnet1Ref')]"
               }
             }
           }
@@ -133,88 +199,239 @@
       }
     },
     {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Compute/virtualMachines",
-      "name": "[parameters('dnsLabelPrefix')]",
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('dcNic')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Storage/storageAccounts',variables('storageAccountName'))]",
-        "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('domainPIPName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnet1Ref')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Network/networkInterfaces",
+      "name": "[variables('coNic')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Network/publicIPAddresses/', variables('centosPIPName'))]",
+        "[concat('Microsoft.Network/virtualNetworks/', variables('virtualNetworkName'))]"
+      ],
+      "properties": {
+        "ipConfigurations": [
+          {
+            "name": "ipconfig1",
+            "properties": {
+              "privateIPAllocationMethod": "Dynamic",
+              "subnet": {
+                "id": "[variables('subnet1Ref')]"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('platformNode')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('nicName'))]"
       ],
       "properties": {
         "hardwareProfile": {
           "vmSize": "[parameters('vmSize')]"
         },
         "osProfile": {
-          "computerName": "[parameters('dnsLabelPrefix')]",
-          "adminUsername": "[parameters('vmAdminUsername')]",
-          "adminPassword": "[parameters('vmAdminPassword')]"
+          "computerName": "[variables('platformNode')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
         },
         "storageProfile": {
           "imageReference": {
-            "publisher": "[variables('imagePublisher')]",
-            "offer": "[variables('imageOffer')]",
-            "sku": "[variables('windowsOSVersion')]",
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2012-R2-Datacenter",
             "version": "latest"
           },
           "osDisk": {
-            "name": "osdisk",
+            "name": "[variables('platformOSDiskName')]",
             "vhd": {
-              "uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/',parameters('dnsLabelPrefix'), 'disk0.vhd')]"
+              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('platformOSDiskName'),'.vhd')]"
             },
             "caching": "ReadWrite",
             "createOption": "FromImage"
-          },
-          "dataDisks": [
-            {
-              "name": "myvm-data-disk1",
-              "vhd": {
-                "Uri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net/vhds/',parameters('dnsLabelPrefix'), 'disk1.vhd')]"
-              },
-              "caching": "None",
-              "createOption": "Empty",
-              "diskSizeGB": "1000",
-              "lun": 0
-            }
-          ]
+          }
         },
         "networkProfile": {
           "networkInterfaces": [
             {
-              "id": "[resourceId('Microsoft.Network/networkInterfaces', variables('nicName'))]"
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('nicName'))]"
             }
           ]
-        },
-        "diagnosticsProfile": {
-          "bootDiagnostics": {
-            "enabled": "true",
-            "storageUri": "[concat('http://',variables('storageAccountName'),'.blob.core.windows.net')]"
-          }
         }
       }
     },
     {
-      "apiVersion": "[variables('apiVersion')]",
-      "type": "Microsoft.Compute/virtualMachines/extensions",
-      "name": "[concat(parameters('dnsLabelPrefix'),'/joindomain')]",
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('domainControllerNode')]",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[concat('Microsoft.Compute/virtualMachines/', parameters('dnsLabelPrefix'))]"
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('dcNic'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('domainControllerNode')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "MicrosoftWindowsServer",
+            "offer": "WindowsServer",
+            "sku": "2012-R2-Datacenter",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('domainControllerOSDiskName')]",
+            "vhd": {
+              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('domainControllerOSDiskName'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('dcNic'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "apiVersion": "2015-05-01-preview",
+      "type": "Microsoft.Compute/virtualMachines",
+      "name": "[variables('centOSNode')]",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Storage/storageAccounts/', parameters('newStorageAccountName'))]",
+        "[concat('Microsoft.Network/networkInterfaces/', variables('coNic'))]"
+      ],
+      "properties": {
+        "hardwareProfile": {
+          "vmSize": "[parameters('vmSize')]"
+        },
+        "osProfile": {
+          "computerName": "[variables('centOSNode')]",
+          "adminUsername": "[parameters('adminUsername')]",
+          "adminPassword": "[parameters('adminPassword')]"
+        },
+        "storageProfile": {
+          "imageReference": {
+            "publisher": "OpenLogic",
+            "offer": "CentOS",
+            "sku": "7.0",
+            "version": "latest"
+          },
+          "osDisk": {
+            "name": "[variables('centOSDiskName')]",
+            "vhd": {
+              "uri": "[concat('http://',parameters('newStorageAccountName'),'.blob.core.windows.net/',variables('vmStorageAccountContainerName'),'/',variables('centOSDiskName'),'.vhd')]"
+            },
+            "caching": "ReadWrite",
+            "createOption": "FromImage"
+          }
+        },
+        "networkProfile": {
+          "networkInterfaces": [
+            {
+              "id": "[resourceId('Microsoft.Network/networkInterfaces',variables('coNic'))]"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('platformNode'),'/', 'CustomScriptExtension')]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('platformNode'))]"
       ],
       "properties": {
         "publisher": "Microsoft.Compute",
-        "type": "JsonADDomainExtension",
-        "typeHandlerVersion": "1.3",
-        "autoUpgradeMinorVersion": true,
+        "type": "CustomScriptExtension",
+        "typeHandlerVersion": "[variables('customScriptExtensionVersion')]",
         "settings": {
-          "Name": "[parameters('domainToJoin')]",
-          "OUPath": "[parameters('ouPath')]",
-          "User": "[concat(parameters('domainToJoin'), '\\', parameters('domainUsername'))]",
-          "Restart": "true",
-          "Options": "[parameters('domainJoinOptions')]"
-        },
-        "protectedsettings": {
-          "Password": "[parameters('domainPassword')]"
+          "fileUris": [
+            "[variables('scriptURL')]"
+          ],
+          "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -file ',variables('scriptName'),' ',variables('scriptArgs'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('domainControllerNode'), '/CustomScriptExtension')]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('domainControllerNode'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "autoUpgradeMinorVersion": true,
+        "typeHandlerVersion": "[variables('customScriptExtensionVersion')]",
+        "settings": {
+          "fileUris": [
+            "[variables('dcScriptURL')]"
+          ],
+          "commandToExecute": "[concat('powershell -ExecutionPolicy Unrestricted -file ',variables('dcScriptName'),' ',variables('dcScriptArgs'))]"
+        }
+      }
+    },
+    {
+      "type": "Microsoft.Compute/virtualMachines/extensions",
+      "name": "[concat(variables('centOSNode'), '/', 'CustomScriptExtension')]",
+      "apiVersion": "2015-05-01-preview",
+      "location": "[resourceGroup().location]",
+      "dependsOn": [
+        "[concat('Microsoft.Compute/virtualMachines/', variables('centOSNode'))]"
+      ],
+      "properties": {
+        "publisher": "Microsoft.Azure.Extensions",
+        "type": "CustomScript",
+        "autoUpgradeMinorVersion": true,
+        "typeHandlerVersion": "[variables('customScriptExtensionVersion')]",
+        "settings": {
+          "fileUris": [
+            "[variables('centosScriptURL')]"
+          ],
+          "commandToExecute": "[concat('sh ', variables('centosScriptName'))]"
         }
       }
     }
