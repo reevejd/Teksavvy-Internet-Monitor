@@ -1,5 +1,8 @@
 A Node.js app for displaying TekSavvy internet usage.
 
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/reevejd/Teksavvy-Internet-Monitor/tree/self-host)
+
+
 [Demo Here](https://internetmonitordemo.herokuapp.com/)
 ------
 

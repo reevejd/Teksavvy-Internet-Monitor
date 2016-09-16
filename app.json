@@ -1,0 +1,15 @@
+{
+  "name": "TekSavvy Internet Monitor",
+  "description": "A simple Node.js internet usage monitor for TekSavvy internet users",
+  "repository": "https://github.com/reevejd/Teksavvy-Internet-Monitor/tree/self-host",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["node", "internet", "monitor", "teksavvy"],
+  "env": {
+      "APIKey": {
+          "Description": "Your TekSavvy API key that you retrieved from https://myaccount.teksavvy.com/ApiKey/ApiKeyManagement"
+      },
+      "Cap": {
+          "Description": "The data usage cap for your plan"
+      }
+  }
+}
